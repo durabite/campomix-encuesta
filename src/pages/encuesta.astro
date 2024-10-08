@@ -155,48 +155,52 @@ const stores: Store[] = [
     </div>
 
     <script>
-        const priceInput = document.getElementById('precio');
-        const storeCheckboxes = document.querySelectorAll('[data-store]');
-        const form = document.getElementById('surveyForm');
+        const priceInput = document.getElementById('precio') as HTMLInputElement;
+        const storeCheckboxes = document.querySelectorAll<HTMLElement>('[data-store]');
+        const form = document.getElementById('surveyForm') as HTMLFormElement;
 
-        function formatPrice(price) {
+        function formatPrice(price: string): string {
             const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
             return isNaN(numericPrice) ? '$0.00' : `$${numericPrice.toFixed(2)}`;
         }
 
-        priceInput.addEventListener('blur', (e) => {
-            e.target.value = formatPrice(e.target.value);
+        priceInput?.addEventListener('blur', (e) => {
+            const target = e.target as HTMLInputElement;
+            target.value = formatPrice(target.value);
         });
 
-        priceInput.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+        priceInput?.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            target.value = target.value.replace(/[^0-9.]/g, '');
         });
 
         storeCheckboxes.forEach(checkbox => {
-            const input = checkbox.querySelector('input[type="checkbox"]');
+            const input = checkbox.querySelector('input[type="checkbox"]') as HTMLInputElement;
             const checkIcon = checkbox.querySelector('svg');
 
             function updateCheckboxStyle() {
-                checkbox.classList.toggle('bg-blue-100', input.checked);
-                checkbox.classList.toggle('border-blue-500', input.checked);
-                checkIcon.classList.toggle('hidden', !input.checked);
+                if (input && checkIcon) {
+                    checkbox.classList.toggle('bg-blue-100', input.checked);
+                    checkbox.classList.toggle('border-blue-500', input.checked);
+                    checkIcon.classList.toggle('hidden', !input.checked);
+                }
             }
 
             checkbox.addEventListener('click', (e) => {
-                if (e.target !== input) {
+                if (e.target !== input && input) {
                     e.preventDefault();
                     input.checked = !input.checked;
                 }
                 updateCheckboxStyle();
             });
 
-            input.addEventListener('change', updateCheckboxStyle);
+            input?.addEventListener('change', updateCheckboxStyle);
 
-            // Inicializar el estilo
+            // Initialize the style
             updateCheckboxStyle();
         });
 
-        form.addEventListener('submit', (e) => {
+        form?.addEventListener('submit', (e) => {
             e.preventDefault();
             console.log('Formulario enviado');
             
