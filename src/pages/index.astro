@@ -1,16 +1,89 @@
 ---
-
+// index.astro
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuesta Campo Azul</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .logo {
+            max-width: 300px;
+            width: 80%;
+            margin-bottom: 40px;
+        }
+        .content {
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #666;
+        }
+        .cta-button {
+            background-color: #7dd0e9;
+            color: #333333;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 15px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #5cb8d1;
+        }
+        .product-image {
+            max-width: 100%;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 20px;
+            }
+            p {
+                font-size: 16px;
+            }
+            .cta-button {
+                font-size: 16px;
+                padding: 12px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/images/campo-azul-logo.png" alt="Campo Azul Logo" class="logo">
+        <div class="content">
+            <h1>Participa en esta breve encuesta</h1>
+            <p>(¡menos de 1 minuto!)</p>
+            <a href="/encuesta" class="cta-button">INICIAR</a>
+        </div>
+        <img src="/images/bg-latas.jpg" alt="Productos Campo Azul" class="product-image">
+    </div>
+</body>
 </html>
