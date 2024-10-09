@@ -1,0 +1,42 @@
+---
+import { Image } from 'astro:assets';
+import logoImage from '../images/campo-azul-logo.png';
+---
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gracias - Campo Azul</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .bg-mix {
+            background-image: url('/images/bg-mix.png');
+            background-repeat: repeat;
+            background-size: auto;
+        }
+    </style>
+</head>
+<body class="bg-mix min-h-screen flex flex-col justify-center items-center">
+    <div class="max-w-2xl mx-auto p-8 bg-white bg-opacity-90 text-gray-800 rounded-lg shadow-lg">
+        <div class="flex justify-center mb-6">
+            <Image
+                src={logoImage}
+                alt="Logo Campo Azul"
+                width={200}
+                height={100}
+                class="mb-4"
+            />
+        </div>
+        <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">¡Gracias por participar!</h1>
+        <p class="text-xl text-center mb-8">
+            Tu opinión es muy importante para nosotros. Agradecemos tu tiempo y tus respuestas.
+        </p>
+        <div class="flex justify-center">
+            <a href="/" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition duration-300 text-lg font-semibold">
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</body>
+</html>
