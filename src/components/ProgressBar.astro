@@ -1,0 +1,29 @@
+---
+export interface Props {
+  progress: number;
+  color: string;
+}
+
+const { progress, color } = Astro.props;
+---
+
+<div class="w-full bg-gray-200 h-4">
+  <div
+    class="progress-bar h-4 transition-all duration-1000 ease-out"
+    style={`width: ${progress}%; background-color: ${color};`}
+  ></div>
+</div>
+
+<script>
+  // This script will run on the client-side
+  const progressBar = document.querySelector('.progress-bar') as HTMLElement;
+
+  if (progressBar) {
+    const updateProgress = (progress: number) => {
+      progressBar.style.width = `${progress}%`;
+    };
+
+    // Expose the updateProgress function globally
+    (window as any).updateProgress = updateProgress;
+  }
+</script>

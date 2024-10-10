@@ -1,0 +1,135 @@
+---
+import { Image } from 'astro:assets';
+import logoImage from '../images/campo-azul-logo.png';
+import WarningMessage from '../components/WarningMessage.astro';
+import ProgressBar from '../components/ProgressBar.astro';
+
+const stores = [
+  { name: 'Oxxo', value: 'oxxo' },
+  { name: '7-Eleven', value: '7eleven' },
+  { name: 'Walmart', value: 'walmart' },
+  { name: 'Soriana', value: 'soriana' },
+  { name: 'Consuvino', value: 'consuvino' },
+  { name: 'Otra', value: 'otra' }
+];
+---
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuesta Campo Azul - Pregunta 7</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .warning-tooltip {
+            display: none;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col items-center justify-start pt-8">
+    <ProgressBar progress={80} color="#d31153" />
+    
+    <div class="max-w-2xl mx-auto p-4 bg-white text-gray-800">
+        <div class="flex justify-center mb-6">
+            <Image
+                src={logoImage}
+                alt="Logo Campo Azul"
+                width={200}
+                height={100}
+                class="mb-4"
+            />
+        </div>
+        <form id="surveyForm" class="space-y-6 bg-gray-100 p-6 rounded-lg shadow">
+            <div class="space-y-2">
+                <label class="block font-semibold">7. ¿Qué tiendas frecuentas más? (Selecciona todas las que apliquen)</label>
+                <div class="space-y-2">
+                    {stores.map((store) => (
+                        <div 
+                            class="flex items-center p-2 border rounded-md cursor-pointer transition-colors duration-200 hover:bg-gray-200"
+                            data-store={store.value}
+                        >
+                            <input 
+                                type="checkbox" 
+                                id={`tienda-${store.value}`}
+                                name="tiendas" 
+                                value={store.value} 
+                                class="form-checkbox h-5 w-5 text-blue-600" 
+                            />
+                            <label for={`tienda-${store.value}`} class="ml-2 flex-grow cursor-pointer">
+                                {store.name}
+                            </label>
+                        </div>
+                    ))}
+                </div>
+                <div class="warning-tooltip">
+                    <WarningMessage message="Por favor, selecciona al menos una tienda" />
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300">
+                Finalizar Encuesta
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('surveyForm') as HTMLFormElement;
+        const storeCheckboxes = document.querySelectorAll('[data-store]');
+        const warningTooltip = document.querySelector('.warning-tooltip') as HTMLElement;
+
+        storeCheckboxes.forEach(checkbox => {
+            const input = checkbox.querySelector('input[type="checkbox"]') as HTMLInputElement;
+
+            function updateCheckboxStyle() {
+                if (input) {
+                    checkbox.classList.toggle('bg-blue-100', input.checked);
+                    checkbox.classList.toggle('border-blue-500', input.checked);
+                }
+            }
+
+            checkbox.addEventListener('click', (e) => {
+                if (e.target !== input && input) {
+                    e.preventDefault();
+                    input.checked = !input.checked;
+                }
+                updateCheckboxStyle();
+                validateStores();
+            });
+
+            input?.addEventListener('change', updateCheckboxStyle);
+
+            updateCheckboxStyle();
+        });
+
+        function validateStores() {
+            if (!form) return false;
+            const checkedStores = form.querySelectorAll('input[name="tiendas"]:checked');
+            const isValid = checkedStores.length > 0;
+            if (warningTooltip) {
+                warningTooltip.style.display = isValid ? 'none' : 'block';
+            }
+            return isValid;
+        }
+
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (validateStores()) {
+                    const formData = new FormData(form);
+                    const selectedStores = formData.getAll('tiendas');
+                    localStorage.setItem('tiendas', JSON.stringify(selectedStores));
+                    localStorage.setItem('surveyProgress', '100');
+                    window.location.href = '/gracias';
+                }
+            });
+        }
+
+        // Establecer el progreso al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '0', 10);
+            (window as any).setProgress(currentProgress);
+        });
+    </script>
+</body>
+</html>
