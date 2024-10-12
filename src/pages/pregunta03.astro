@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import logoImage from '../images/campo-azul-logo.png';
+import bgImage from '../images/bg-campomix-frutos-rojos.png';
 import WarningMessage from '../components/WarningMessage.astro';
 import ProgressBar from '../components/ProgressBar.astro';
 ---
@@ -11,17 +12,39 @@ import ProgressBar from '../components/ProgressBar.astro';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Encuesta Campo Azul - Preguntas 5 y 6</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preload" as="image" href="/images/bg-campomix-paloma.png">
     <style>
+        body {
+            background-image: url('/images/bg-campomix-paloma.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
         .warning-tooltip {
             display: none;
             margin-top: 0.5rem;
         }
+        .content-wrapper {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
     </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col items-center justify-start pt-8">
-    <ProgressBar progress={60} color="#48ae4d" />
+<body class="min-h-screen flex flex-col items-center justify-start pt-8">
+    <div class="progress-container">
+        <ProgressBar progress={40} color="#48ae4d" />
+    </div>
     
-    <div class="max-w-2xl mx-auto p-4 bg-white text-gray-800">
+    <div class="max-w-2xl mx-auto p-4 content-wrapper mt-16">
         <div class="flex justify-center mb-6">
             <Image
                 src={logoImage}
@@ -31,7 +54,7 @@ import ProgressBar from '../components/ProgressBar.astro';
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-gray-100 p-6 rounded-lg shadow">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
             <div class="space-y-2">
                 <label for="precio" class="block font-semibold">5. ¿Cuál es el precio que estás dispuesto a pagar por él? (en pesos)</label>
                 <input 
@@ -76,6 +99,29 @@ import ProgressBar from '../components/ProgressBar.astro';
         const form = document.getElementById('surveyForm') as HTMLFormElement;
         const priceInput = document.getElementById('precio') as HTMLInputElement;
         const saborSelect = document.getElementById('sabor') as HTMLSelectElement;
+
+        function animateProgress(start: number, end: number, duration: number) {
+            const startTime = performance.now();
+            const updateProgress = (window as any).updateProgress;
+            
+            if (typeof updateProgress !== 'function') {
+                console.error('updateProgress function not found');
+                return;
+            }
+
+            function step(currentTime: number) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime < duration) {
+                    const progress = start + (end - start) * (elapsedTime / duration);
+                    updateProgress(progress);
+                    requestAnimationFrame(step);
+                } else {
+                    updateProgress(end);
+                }
+            }
+            
+            requestAnimationFrame(step);
+        }
 
         function formatPrice(price: string): string {
             const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
@@ -127,7 +173,7 @@ import ProgressBar from '../components/ProgressBar.astro';
                     for (let [key, value] of formData.entries()) {
                         localStorage.setItem(key, value.toString());
                     }
-                    localStorage.setItem('surveyProgress', '80');
+                    localStorage.setItem('surveyProgress', '60');
                     window.location.href = '/pregunta04';
                 }
             });
@@ -135,8 +181,10 @@ import ProgressBar from '../components/ProgressBar.astro';
 
         // Establecer el progreso al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
-            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '0', 10);
-            (window as any).setProgress(currentProgress);
+            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '40', 10);
+            
+            // Animar la barra de progreso
+            animateProgress(currentProgress, 60, 1000);
         });
     </script>
 </body>

@@ -11,8 +11,15 @@ import ProgressBar from '../components/ProgressBar.astro';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Encuesta Campo Azul</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="preload" as="image" href="/images/bg-campomix-mineral.png">
   <style>
+    body {
+      background-image: url('/images/bg-latas.jpg');
+      background-size: 50% auto;
+      background-position: bottom center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
     .gradient-progress {
       background: linear-gradient(to right, #35a6df, #ed6b28, #48ae4d, #d31153);
       background-size: 300% 100%;
@@ -29,14 +36,20 @@ import ProgressBar from '../components/ProgressBar.astro';
         background-position: 0% 50%;
       }
     }
+    .content-wrapper {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-top: 10vh;
+    }
   </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col items-center justify-start pt-8">
+<body class="flex flex-col items-center">
   <div class="w-full h-4 fixed top-0 left-0 z-50">
-    <ProgressBar progress={0} color="#35a6df" />
+    <div class="gradient-progress h-4 transition-all duration-1000 ease-out" style="width: 0%;"></div>
   </div>
   
-  <div class="max-w-2xl mx-auto p-4 bg-white text-gray-800">
+  <div class="max-w-2xl mx-auto p-4 content-wrapper">
     <div class="flex justify-center mb-6">
       <Image
         src={logoImage}
@@ -51,25 +64,16 @@ import ProgressBar from '../components/ProgressBar.astro';
         Participa en esta breve encuesta
       </p>
       <p class="text-sm text-gray-500">
-        (menos de 1 minuto!)
+        ¡menos de 1 minuto!
       </p>
     </div>
     <div class="flex justify-center mt-8">
       <a
         href="/pregunta01"
-        class="px-8 py-3 bg-blue-500 text-white text-lg font-semibold rounded-full hover:bg-blue-600 transition-colors duration-300 shadow-md"
+        class="px-8 py-3 bg-blue-500 text-white text-lg font-semibold rounded-2xl hover:bg-blue-600 transition-colors duration-300 shadow-md"
       >
         INICIAR
       </a>
-    </div>
-    <div class="flex justify-center mt-8">
-      <Image
-        src={latasImage}
-        alt="Campo Azul Cans"
-        width={600}
-        height={300}
-        class="w-full max-w-md"
-      />
     </div>
   </div>
 
@@ -79,9 +83,9 @@ import ProgressBar from '../components/ProgressBar.astro';
 
     // Establecer el ancho de la barra de progreso a 0% en la página de inicio
     document.addEventListener('DOMContentLoaded', () => {
-      const updateProgress = (window as any).updateProgress;
-      if (typeof updateProgress === 'function') {
-        updateProgress(0);
+      const progressBar = document.querySelector('.gradient-progress') as HTMLElement;
+      if (progressBar) {
+        progressBar.style.width = '0%';
       }
     });
   </script>

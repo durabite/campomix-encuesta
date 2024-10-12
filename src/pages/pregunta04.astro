@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import logoImage from '../images/campo-azul-logo.png';
+import bgImage from '../images/bg-campomix-paloma.png';
 import WarningMessage from '../components/WarningMessage.astro';
 import ProgressBar from '../components/ProgressBar.astro';
 
@@ -20,17 +21,39 @@ const stores = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Encuesta Campo Azul - Pregunta 7</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preload" as="image" href="/images/bg-campomix-frutos-rojos.png">
     <style>
+        body {
+            background-image: url('/images/bg-campomix-frutos-rojos.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
         .warning-tooltip {
             display: none;
             margin-top: 0.5rem;
         }
+        .content-wrapper {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
     </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col items-center justify-start pt-8">
-    <ProgressBar progress={80} color="#d31153" />
+<body class="min-h-screen flex flex-col items-center justify-start pt-8">
+    <div class="progress-container">
+        <ProgressBar progress={60} color="#d31153" />
+    </div>
     
-    <div class="max-w-2xl mx-auto p-4 bg-white text-gray-800">
+    <div class="max-w-2xl mx-auto p-4 content-wrapper mt-16">
         <div class="flex justify-center mb-6">
             <Image
                 src={logoImage}
@@ -40,7 +63,7 @@ const stores = [
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-gray-100 p-6 rounded-lg shadow">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
             <div class="space-y-2">
                 <label class="block font-semibold">7. ¿Qué tiendas frecuentas más? (Selecciona todas las que apliquen)</label>
                 <div class="space-y-2">
@@ -77,6 +100,29 @@ const stores = [
         const form = document.getElementById('surveyForm') as HTMLFormElement;
         const storeCheckboxes = document.querySelectorAll('[data-store]');
         const warningTooltip = document.querySelector('.warning-tooltip') as HTMLElement;
+
+        function animateProgress(start: number, end: number, duration: number) {
+            const startTime = performance.now();
+            const updateProgress = (window as any).updateProgress;
+            
+            if (typeof updateProgress !== 'function') {
+                console.error('updateProgress function not found');
+                return;
+            }
+
+            function step(currentTime: number) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime < duration) {
+                    const progress = start + (end - start) * (elapsedTime / duration);
+                    updateProgress(progress);
+                    requestAnimationFrame(step);
+                } else {
+                    updateProgress(end);
+                }
+            }
+            
+            requestAnimationFrame(step);
+        }
 
         storeCheckboxes.forEach(checkbox => {
             const input = checkbox.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -119,7 +165,7 @@ const stores = [
                     const formData = new FormData(form);
                     const selectedStores = formData.getAll('tiendas');
                     localStorage.setItem('tiendas', JSON.stringify(selectedStores));
-                    localStorage.setItem('surveyProgress', '100');
+                    localStorage.setItem('surveyProgress', '80');
                     window.location.href = '/gracias';
                 }
             });
@@ -127,8 +173,10 @@ const stores = [
 
         // Establecer el progreso al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
-            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '0', 10);
-            (window as any).setProgress(currentProgress);
+            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '60', 10);
+            
+            // Animar la barra de progreso
+            animateProgress(currentProgress, 80, 1000);
         });
     </script>
 </body>
