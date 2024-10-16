@@ -4,6 +4,7 @@ import logoImage from '../images/campo-azul-logo.png';
 import bgImage from '../images/bg-campomix-mineral.png';
 import WarningMessage from '../components/WarningMessage.astro';
 import ProgressBar from '../components/ProgressBar.astro';
+import 'animate.css/animate.min.css';
 ---
 
 <html lang="es">
@@ -15,7 +16,7 @@ import ProgressBar from '../components/ProgressBar.astro';
     <link rel="preload" as="image" href="/images/bg-campomix-mineral.png">
     <style>
         body {
-            background-image: url('/images/bg-campomix-mineral.png');
+            background-image: url('/images/bg-mineral.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -26,9 +27,10 @@ import ProgressBar from '../components/ProgressBar.astro';
             margin-top: 0.5rem;
         }
         .content-wrapper {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.4);
             border-radius: 1rem;
             padding: 2rem;
+            border: 2px solid #35a6df;
         }
         .progress-container {
             position: fixed;
@@ -44,7 +46,7 @@ import ProgressBar from '../components/ProgressBar.astro';
         <ProgressBar progress={0} color="#35a6df" />
     </div>
     
-    <div class="max-w-2xl mx-auto p-4 content-wrapper mt-16">
+    <div class="max-w-2xl mx-auto p-4 content-wrapper mt-16 animate__animated animate__bounceInDown">
         <div class="flex justify-center mb-6">
             <Image
                 src={logoImage}
