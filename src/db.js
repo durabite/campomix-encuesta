@@ -1,10 +1,10 @@
-const { Pool } = require('pg');
+import pg from 'pg';
 
-const pool = new Pool({
+const pool = new pg.Pool({
   connectionString: process.env.POSTGRES_URL,
   ssl: {
     rejectUnauthorized: false
   }
 });
 
-module.exports = pool;
+export default pool;
