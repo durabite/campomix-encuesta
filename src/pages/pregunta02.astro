@@ -5,6 +5,31 @@ import bgImage from '../images/bg-piña.png';
 import WarningMessage from '../components/WarningMessage.astro';
 import ProgressBar from '../components/ProgressBar.astro';
 import 'animate.css/animate.min.css';
+import pool from '../db';
+
+// Manejador para el envío del formulario
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const imagen = formData.get('imagen');
+    const compra = formData.get('compra');
+
+    const client = await pool.connect();
+    try {
+      await client.query(
+        'INSERT INTO survey_responses (imagen, compra) VALUES ($1, $2)',
+        [imagen, compra]
+      );
+    } finally {
+      client.release();
+    }
+
+    // Redirigir a la siguiente página después de guardar los datos
+    return Astro.redirect('/pregunta03');
+  } catch (error) {
+    console.error('Error al guardar la respuesta:', error);
+  }
+}
 ---
 
 <html lang="es">
@@ -56,7 +81,7 @@ import 'animate.css/animate.min.css';
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow" method="POST">
             <div class="space-y-2">
                 <label class="block font-semibold">3. ¿Te gusta la imagen de Mix Campo Azul?</label>
                 <div class="space-x-4">
@@ -98,80 +123,92 @@ import 'animate.css/animate.min.css';
     </div>
 
     <script>
-        const form = document.getElementById('surveyForm') as HTMLFormElement;
+    declare global {
+      interface Window {
+        updateProgress: (progress: number) => void;
+      }
+    }
 
-        function animateProgress(start: number, end: number, duration: number) {
-            const startTime = performance.now();
-            const updateProgress = (window as any).updateProgress;
-            
-            if (typeof updateProgress !== 'function') {
-                console.error('updateProgress function not found');
-                return;
-            }
+    const form = document.getElementById('surveyForm') as HTMLFormElement | null;
 
-            function step(currentTime: number) {
-                const elapsedTime = currentTime - startTime;
-                if (elapsedTime < duration) {
-                    const progress = start + (end - start) * (elapsedTime / duration);
-                    updateProgress(progress);
-                    requestAnimationFrame(step);
-                } else {
-                    updateProgress(end);
-                }
-            }
-            
-            requestAnimationFrame(step);
+    function animateProgress(start: number, end: number, duration: number) {
+      const startTime = performance.now();
+      const updateProgress = window.updateProgress;
+      
+      if (typeof updateProgress !== 'function') {
+        console.error('updateProgress function not found');
+        return;
+      }
+
+      function step(currentTime: number) {
+        const elapsedTime = currentTime - startTime;
+        if (elapsedTime < duration) {
+          const progress = start + (end - start) * (elapsedTime / duration);
+          updateProgress(progress);
+          requestAnimationFrame(step);
+        } else {
+          updateProgress(end);
         }
+      }
+      
+      requestAnimationFrame(step);
+    }
 
-        if (form) {
-            const inputs = form.querySelectorAll('input');
-            const warningTooltips = document.querySelectorAll('.warning-tooltip');
+    const inputs = form?.querySelectorAll('input');
+    const warningTooltips = document.querySelectorAll('.warning-tooltip');
 
-            function validateField(field: HTMLInputElement) {
-                const warningTooltip = field.closest('.space-y-2')?.querySelector('.warning-tooltip') as HTMLElement | null;
-                if (!warningTooltip) return true;
+    function validateField(field: HTMLInputElement) {
+      const warningTooltip = field.closest('.space-y-2')?.querySelector('.warning-tooltip') as HTMLElement | null;
+      if (!warningTooltip) return true;
 
-                const isValid = !!form.querySelector(`input[name="${field.name}"]:checked`);
-                if (warningTooltip) {
-                    warningTooltip.style.display = isValid ? 'none' : 'block';
-                }
-                return isValid;
-            }
+      const isValid = !!form?.querySelector(`input[name="${field.name}"]:checked`);
+      if (warningTooltip) {
+        warningTooltip.style.display = isValid ? 'none' : 'block';
+      }
+      return isValid;
+    }
 
-            inputs.forEach(input => {
-                input.addEventListener('change', () => {
-                    validateField(input as HTMLInputElement);
-                });
-            });
+    inputs?.forEach(input => {
+      input.addEventListener('change', () => {
+        validateField(input as HTMLInputElement);
+      });
+    });
 
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                let isValid = true;
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let isValid = true;
 
-                inputs.forEach(input => {
-                    if (!validateField(input as HTMLInputElement)) {
-                        isValid = false;
-                    }
-                });
-
-                if (isValid) {
-                    const formData = new FormData(form);
-                    for (let [key, value] of formData.entries()) {
-                        localStorage.setItem(key, value.toString());
-                    }
-                    localStorage.setItem('surveyProgress', '40');
-                    window.location.href = '/pregunta03';
-                }
-            });
+      inputs?.forEach(input => {
+        if (!validateField(input as HTMLInputElement)) {
+          isValid = false;
         }
+      });
 
-        // Establecer el progreso al cargar la página
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '20', 10);
-            
-            // Animar la barra de progreso
-            animateProgress(currentProgress, 40, 1000);
-        });
+      if (isValid) {
+        const formData = new FormData(form);
+        
+        try {
+          const response = await fetch('', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (response.ok) {
+            localStorage.setItem('surveyProgress', '40');
+            window.location.href = '/pregunta03';
+          } else {
+            console.error('Error al enviar el formulario');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '20', 10);
+      animateProgress(currentProgress, 40, 1000);
+    });
     </script>
 </body>
 </html>

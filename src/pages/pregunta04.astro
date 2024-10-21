@@ -5,7 +5,7 @@ import bgImage from '../images/bg-frutos-rojos.png';
 import WarningMessage from '../components/WarningMessage.astro';
 import ProgressBar from '../components/ProgressBar.astro';
 import 'animate.css/animate.min.css';
-
+import pool from '../db';
 
 const stores = [
   { name: 'Oxxo', value: 'oxxo' },
@@ -15,6 +15,41 @@ const stores = [
   { name: 'Consuvino', value: 'consuvino' },
   { name: 'Otra', value: 'otra' }
 ];
+
+// Manejador para el envío del formulario
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const tiendas = formData.getAll('tiendas');
+
+    const client = await pool.connect();
+    try {
+      // Recuperar datos de las páginas anteriores del localStorage
+      const conoceMarca = localStorage.getItem('conoce_marca');
+      const haProbado = localStorage.getItem('ha_probado');
+      const imagen = localStorage.getItem('imagen');
+      const compra = localStorage.getItem('compra');
+      const precio = localStorage.getItem('precio');
+      const sabor = localStorage.getItem('sabor');
+
+      // Insertar todos los datos en la base de datos
+      await client.query(
+        'INSERT INTO survey_responses (conoce_marca, ha_probado, imagen, compra, precio, sabor, tiendas) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [conoceMarca, haProbado, imagen, compra, precio, sabor, JSON.stringify(tiendas)]
+      );
+    } finally {
+      client.release();
+    }
+
+    // Limpiar localStorage
+    localStorage.clear();
+
+    // Redirigir a la página de agradecimiento
+    return Astro.redirect('/gracias');
+  } catch (error) {
+    console.error('Error al guardar la respuesta:', error);
+  }
+}
 ---
 
 <html lang="es">
@@ -66,7 +101,7 @@ const stores = [
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow" method="POST">
             <div class="space-y-2">
                 <label class="block font-semibold">7. ¿Qué tiendas frecuentas más? (Selecciona todas las que apliquen)</label>
                 <div class="space-y-2">
@@ -100,87 +135,100 @@ const stores = [
     </div>
 
     <script>
-        const form = document.getElementById('surveyForm') as HTMLFormElement;
-        const storeCheckboxes = document.querySelectorAll('[data-store]');
-        const warningTooltip = document.querySelector('.warning-tooltip') as HTMLElement;
+    declare global {
+      interface Window {
+        updateProgress: (progress: number) => void;
+      }
+    }
 
-        function animateProgress(start: number, end: number, duration: number) {
-            const startTime = performance.now();
-            const updateProgress = (window as any).updateProgress;
-            
-            if (typeof updateProgress !== 'function') {
-                console.error('updateProgress function not found');
-                return;
-            }
+    const form = document.getElementById('surveyForm') as HTMLFormElement | null;
+    const storeCheckboxes = document.querySelectorAll('[data-store]');
+    const warningTooltip = document.querySelector('.warning-tooltip') as HTMLElement | null;
 
-            function step(currentTime: number) {
-                const elapsedTime = currentTime - startTime;
-                if (elapsedTime < duration) {
-                    const progress = start + (end - start) * (elapsedTime / duration);
-                    updateProgress(progress);
-                    requestAnimationFrame(step);
-                } else {
-                    updateProgress(end);
-                }
-            }
-            
-            requestAnimationFrame(step);
+    function animateProgress(start: number, end: number, duration: number) {
+      const startTime = performance.now();
+      const updateProgress = window.updateProgress;
+      
+      if (typeof updateProgress !== 'function') {
+        console.error('updateProgress function not found');
+        return;
+      }
+
+      function step(currentTime: number) {
+        const elapsedTime = currentTime - startTime;
+        if (elapsedTime < duration) {
+          const progress = start + (end - start) * (elapsedTime / duration);
+          updateProgress(progress);
+          requestAnimationFrame(step);
+        } else {
+          updateProgress(end);
         }
+      }
+      
+      requestAnimationFrame(step);
+    }
 
-        storeCheckboxes.forEach(checkbox => {
-            const input = checkbox.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    storeCheckboxes.forEach(checkbox => {
+      const input = checkbox.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
 
-            function updateCheckboxStyle() {
-                if (input) {
-                    checkbox.classList.toggle('bg-blue-100', input.checked);
-                    checkbox.classList.toggle('border-blue-500', input.checked);
-                }
-            }
-
-            checkbox.addEventListener('click', (e) => {
-                if (e.target !== input && input) {
-                    e.preventDefault();
-                    input.checked = !input.checked;
-                }
-                updateCheckboxStyle();
-                validateStores();
-            });
-
-            input?.addEventListener('change', updateCheckboxStyle);
-
-            updateCheckboxStyle();
-        });
-
-        function validateStores() {
-            if (!form) return false;
-            const checkedStores = form.querySelectorAll('input[name="tiendas"]:checked');
-            const isValid = checkedStores.length > 0;
-            if (warningTooltip) {
-                warningTooltip.style.display = isValid ? 'none' : 'block';
-            }
-            return isValid;
+      function updateCheckboxStyle() {
+        if (input) {
+          checkbox.classList.toggle('bg-blue-100', input.checked);
+          checkbox.classList.toggle('border-blue-500', input.checked);
         }
+      }
 
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (validateStores()) {
-                    const formData = new FormData(form);
-                    const selectedStores = formData.getAll('tiendas');
-                    localStorage.setItem('tiendas', JSON.stringify(selectedStores));
-                    localStorage.setItem('surveyProgress', '80');
-                    window.location.href = '/gracias';
-                }
-            });
+      checkbox.addEventListener('click', (e) => {
+        if (e.target !== input && input) {
+          e.preventDefault();
+          input.checked = !input.checked;
         }
+        updateCheckboxStyle();
+        validateStores();
+      });
 
-        // Establecer el progreso al cargar la página
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '60', 10);
-            
-            // Animar la barra de progreso
-            animateProgress(currentProgress, 80, 1000);
-        });
+      input?.addEventListener('change', updateCheckboxStyle);
+
+      updateCheckboxStyle();
+    });
+
+    function validateStores() {
+      if (!form) return false;
+      const checkedStores = form.querySelectorAll('input[name="tiendas"]:checked');
+      const isValid = checkedStores.length > 0;
+      if (warningTooltip) {
+        warningTooltip.style.display = isValid ? 'none' : 'block';
+      }
+      return isValid;
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (validateStores()) {
+        const formData = new FormData(form);
+        
+        try {
+          const response = await fetch('', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (response.ok) {
+            localStorage.setItem('surveyProgress', '100');
+            window.location.href = '/gracias';
+          } else {
+            console.error('Error al enviar el formulario');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '60', 10);
+      animateProgress(currentProgress, 80, 1000);
+    });
     </script>
 </body>
 </html>
