@@ -1,11 +1,11 @@
 import pg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const pool = new pg.Pool({
-  host: 'localhost', // o la dirección IP de tu servidor de base de datos
-  port: 5432,
-  database: 'verceldb',
-  user: 'default',
-  password: '5iI4eqYMSKjr',
+  connectionString: process.env.POSTGRES_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 export default pool;

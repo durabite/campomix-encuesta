@@ -16,6 +16,14 @@ const stores = [
   { name: 'Otra', value: 'otra' }
 ];
 
+function convertPrice(price: string | number): number {
+  if (typeof price === 'string') {
+    // Elimina el símbolo de dólar y cualquier coma, luego convierte a número con 2 decimales
+    return parseFloat(parseFloat(price.replace(/[$,]/g, '')).toFixed(2));
+  }
+  return parseFloat(price.toFixed(2));
+}
+
 // Manejador para el envío del formulario
 if (Astro.request.method === 'POST') {
   try {
@@ -29,7 +37,7 @@ if (Astro.request.method === 'POST') {
       const haProbado = formData.get('ha_probado');
       const imagen = formData.get('imagen');
       const compra = formData.get('compra');
-      const precio = formData.get('precio');
+      const precio = convertPrice(formData.get('precio') as string);
       const sabor = formData.get('sabor');
 
       // Insertar todos los datos en la base de datos
