@@ -4,32 +4,6 @@ import logoImage from '../images/campo-azul-logo.png';
 import bgImage from '../images/bg-campomix-mineral.png';
 import WarningMessage from '../components/WarningMessage.astro';
 import ProgressBar from '../components/ProgressBar.astro';
-import 'animate.css/animate.min.css';
-import pool from '../db';
-
-// Manejador para el envío del formulario
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const conoceMarca = formData.get('conoce_marca');
-    const haProbado = formData.get('ha_probado');
-
-    const client = await pool.connect();
-    try {
-      await client.query(
-        'INSERT INTO survey_responses (conoce_marca, ha_probado) VALUES ($1, $2)',
-        [conoceMarca, haProbado]
-      );
-    } finally {
-      client.release();
-    }
-
-    // Redirigir a la siguiente página después de guardar los datos
-    return Astro.redirect('/pregunta02');
-  } catch (error) {
-    console.error('Error al guardar la respuesta:', error);
-  }
-}
 ---
 
 <html lang="es">
@@ -81,7 +55,7 @@ if (Astro.request.method === 'POST') {
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow" method="POST">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
             <div class="space-y-2">
                 <label class="block font-semibold">1. ¿Conoces la marca Campo Azul?</label>
                 <div class="space-x-4">
@@ -123,37 +97,7 @@ if (Astro.request.method === 'POST') {
     </div>
 
     <script>
-    declare global {
-      interface Window {
-        updateProgress: (progress: number) => void;
-      }
-    }
-
-    const form = document.getElementById('surveyForm') as HTMLFormElement | null;
-
-    function animateProgress(start: number, end: number, duration: number) {
-      const startTime = performance.now();
-      const updateProgress = window.updateProgress;
-      
-      if (typeof updateProgress !== 'function') {
-        console.error('updateProgress function not found');
-        return;
-      }
-
-      function step(currentTime: number) {
-        const elapsedTime = currentTime - startTime;
-        if (elapsedTime < duration) {
-          const progress = start + (end - start) * (elapsedTime / duration);
-          updateProgress(progress);
-          requestAnimationFrame(step);
-        } else {
-          updateProgress(end);
-        }
-      }
-      
-      requestAnimationFrame(step);
-    }
-
+    const form = document.getElementById('surveyForm') as HTMLFormElement;
     const inputs = form?.querySelectorAll('input');
     const warningTooltips = document.querySelectorAll('.warning-tooltip');
 
@@ -162,9 +106,7 @@ if (Astro.request.method === 'POST') {
       if (!warningTooltip) return true;
 
       const isValid = !!form?.querySelector(`input[name="${field.name}"]:checked`);
-      if (warningTooltip) {
-        warningTooltip.style.display = isValid ? 'none' : 'block';
-      }
+      warningTooltip.style.display = isValid ? 'none' : 'block';
       return isValid;
     }
 
@@ -174,7 +116,7 @@ if (Astro.request.method === 'POST') {
       });
     });
 
-    form?.addEventListener('submit', async (e) => {
+    form?.addEventListener('submit', (e) => {
       e.preventDefault();
       let isValid = true;
 
@@ -186,28 +128,23 @@ if (Astro.request.method === 'POST') {
 
       if (isValid) {
         const formData = new FormData(form);
-        
-        try {
-          const response = await fetch('', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (response.ok) {
-            localStorage.setItem('surveyProgress', '20');
-            window.location.href = '/pregunta02';
-          } else {
-            console.error('Error al enviar el formulario');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-        }
+        const data = Object.fromEntries(formData);
+        localStorage.setItem('pregunta01', JSON.stringify(data));
+        window.location.href = '/pregunta02';
       }
     });
 
+    function updateProgress(progress: number) {
+      localStorage.setItem('surveyProgress', progress.toString());
+      const progressBar = document.querySelector('.progress-container .progress-bar') as HTMLElement | null;
+      if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       const currentProgress = parseInt(localStorage.getItem('surveyProgress') || '0', 10);
-      animateProgress(currentProgress, 20, 1000);
+      updateProgress(20);
     });
     </script>
 </body>

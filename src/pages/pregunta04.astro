@@ -24,13 +24,13 @@ if (Astro.request.method === 'POST') {
 
     const client = await pool.connect();
     try {
-      // Recuperar datos de las páginas anteriores del localStorage
-      const conoceMarca = localStorage.getItem('conoce_marca');
-      const haProbado = localStorage.getItem('ha_probado');
-      const imagen = localStorage.getItem('imagen');
-      const compra = localStorage.getItem('compra');
-      const precio = localStorage.getItem('precio');
-      const sabor = localStorage.getItem('sabor');
+      // Recuperar datos de las páginas anteriores del formData
+      const conoceMarca = formData.get('conoce_marca');
+      const haProbado = formData.get('ha_probado');
+      const imagen = formData.get('imagen');
+      const compra = formData.get('compra');
+      const precio = formData.get('precio');
+      const sabor = formData.get('sabor');
 
       // Insertar todos los datos en la base de datos
       await client.query(
@@ -40,9 +40,6 @@ if (Astro.request.method === 'POST') {
     } finally {
       client.release();
     }
-
-    // Limpiar localStorage
-    localStorage.clear();
 
     // Redirigir a la página de agradecimiento
     return Astro.redirect('/gracias');
@@ -207,6 +204,22 @@ if (Astro.request.method === 'POST') {
       if (validateStores()) {
         const formData = new FormData(form);
         
+        // Agregar datos del localStorage al formData
+        const localStorageData = {
+          'pregunta01': ['conoce_marca', 'ha_probado'],
+          'pregunta02': ['imagen', 'compra'],
+          'pregunta03': ['precio', 'sabor']
+        };
+
+        for (const [key, fields] of Object.entries(localStorageData)) {
+          const storedData = JSON.parse(localStorage.getItem(key) || '{}');
+          fields.forEach(field => {
+            if (storedData[field]) {
+              formData.append(field, storedData[field]);
+            }
+          });
+        }
+        
         try {
           const response = await fetch('', {
             method: 'POST',
@@ -214,7 +227,7 @@ if (Astro.request.method === 'POST') {
           });
 
           if (response.ok) {
-            localStorage.setItem('surveyProgress', '100');
+            localStorage.clear();
             window.location.href = '/gracias';
           } else {
             console.error('Error al enviar el formulario');

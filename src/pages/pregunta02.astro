@@ -7,29 +7,29 @@ import ProgressBar from '../components/ProgressBar.astro';
 import 'animate.css/animate.min.css';
 import pool from '../db';
 
-// Manejador para el envío del formulario
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const imagen = formData.get('imagen');
-    const compra = formData.get('compra');
+// Comentamos el manejador del lado del servidor ya que guardaremos todos los datos al final
+// if (Astro.request.method === 'POST') {
+//   try {
+//     const formData = await Astro.request.formData();
+//     const imagen = formData.get('imagen');
+//     const compra = formData.get('compra');
 
-    const client = await pool.connect();
-    try {
-      await client.query(
-        'INSERT INTO survey_responses (imagen, compra) VALUES ($1, $2)',
-        [imagen, compra]
-      );
-    } finally {
-      client.release();
-    }
+//     const client = await pool.connect();
+//     try {
+//       await client.query(
+//         'INSERT INTO survey_responses (imagen, compra) VALUES ($1, $2)',
+//         [imagen, compra]
+//       );
+//     } finally {
+//       client.release();
+//     }
 
-    // Redirigir a la siguiente página después de guardar los datos
-    return Astro.redirect('/pregunta03');
-  } catch (error) {
-    console.error('Error al guardar la respuesta:', error);
-  }
-}
+//     // Redirigir a la siguiente página después de guardar los datos
+//     return Astro.redirect('/pregunta03');
+//   } catch (error) {
+//     console.error('Error al guardar la respuesta:', error);
+//   }
+// }
 ---
 
 <html lang="es">
@@ -81,7 +81,7 @@ if (Astro.request.method === 'POST') {
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow" method="POST">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
             <div class="space-y-2">
                 <label class="block font-semibold">3. ¿Te gusta la imagen de Mix Campo Azul?</label>
                 <div class="space-x-4">
@@ -186,22 +186,16 @@ if (Astro.request.method === 'POST') {
 
       if (isValid) {
         const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
         
-        try {
-          const response = await fetch('', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (response.ok) {
-            localStorage.setItem('surveyProgress', '40');
-            window.location.href = '/pregunta03';
-          } else {
-            console.error('Error al enviar el formulario');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-        }
+        // Guardar datos en localStorage
+        localStorage.setItem('pregunta02', JSON.stringify(data));
+        
+        // Actualizar el progreso
+        localStorage.setItem('surveyProgress', '40');
+        
+        // Redirigir a la siguiente página
+        window.location.href = '/pregunta03';
       }
     });
 

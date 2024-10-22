@@ -7,29 +7,29 @@ import ProgressBar from '../components/ProgressBar.astro';
 import 'animate.css/animate.min.css';
 import pool from '../db';
 
-// Manejador para el envío del formulario
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const precio = formData.get('precio');
-    const sabor = formData.get('sabor');
+// Comentamos el manejador del lado del servidor ya que guardaremos todos los datos al final
+// if (Astro.request.method === 'POST') {
+//   try {
+//     const formData = await Astro.request.formData();
+//     const precio = formData.get('precio');
+//     const sabor = formData.get('sabor');
 
-    const client = await pool.connect();
-    try {
-      await client.query(
-        'INSERT INTO survey_responses (precio, sabor) VALUES ($1, $2)',
-        [precio, sabor]
-      );
-    } finally {
-      client.release();
-    }
+//     const client = await pool.connect();
+//     try {
+//       await client.query(
+//         'INSERT INTO survey_responses (precio, sabor) VALUES ($1, $2)',
+//         [precio, sabor]
+//       );
+//     } finally {
+//       client.release();
+//     }
 
-    // Redirigir a la siguiente página después de guardar los datos
-    return Astro.redirect('/pregunta04');
-  } catch (error) {
-    console.error('Error al guardar la respuesta:', error);
-  }
-}
+//     // Redirigir a la siguiente página después de guardar los datos
+//     return Astro.redirect('/pregunta04');
+//   } catch (error) {
+//     console.error('Error al guardar la respuesta:', error);
+//   }
+// }
 ---
 
 <html lang="es">
@@ -81,7 +81,7 @@ if (Astro.request.method === 'POST') {
                 class="mb-4"
             />
         </div>
-        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow" method="POST">
+        <form id="surveyForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
             <div class="space-y-2">
                 <label for="precio" class="block font-semibold">5. ¿Cuál es el precio que estás dispuesto a pagar por él? (en pesos)</label>
                 <input 
@@ -202,22 +202,16 @@ if (Astro.request.method === 'POST') {
 
       if (isValid) {
         const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
         
-        try {
-          const response = await fetch('', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (response.ok) {
-            localStorage.setItem('surveyProgress', '60');
-            window.location.href = '/pregunta04';
-          } else {
-            console.error('Error al enviar el formulario');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-        }
+        // Guardar datos en localStorage
+        localStorage.setItem('pregunta03', JSON.stringify(data));
+        
+        // Actualizar el progreso
+        localStorage.setItem('surveyProgress', '60');
+        
+        // Redirigir a la siguiente página
+        window.location.href = '/pregunta04';
       }
     });
 
